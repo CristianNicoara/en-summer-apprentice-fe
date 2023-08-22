@@ -7,12 +7,38 @@ body {
   flex-wrap: wrap;
 }
 
+.filters {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.flex-row-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  width: 100%;
+}
+
+.flex-direction-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0 10px;
+}
+
+.orders-page{
+  background: rgb(48,41,66);
+  background: linear-gradient(90deg, rgba(48,41,66,1) 0%, rgba(43,153,144,1) 50%, rgba(51,40,69,1) 100%, rgba(68,167,159,1) 100%);
+}
+
 h1 {
   text-align: center;
   font-size: 32px;
   font-weight: bold;
   margin-bottom: 12px;
-  color: #302942;
+  color: #ffffff;
 }
 
 .events .event {

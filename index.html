@@ -11,7 +11,7 @@
 		 crossorigin="anonymous" referrerpolicy="no-referrer" />
 		<link 
 			rel="stylesheet"
-			href = "https://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.1.4/toastr.min.css"
+			href = "https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css"
 		/>
 
 		<title>Ticket Management</title>
@@ -72,10 +72,16 @@
 				</ul>
 			</div>
 		</header>
+		<div
+			id="loader"
+			class="opacity-100 fixed top-2/4 left-1/2 -translate-x-1/2 translate-y-1/2"
+		>
+			<i class="fa-solid fa-spinner fa-spin-pulse fa-2xl" style="color: #b0b0b0"></i>
+		</div>
 		<main class="main-content-component">
 		</main>
 		<script type="module" src="./main.js"></script>
-		<script scr="https://cdnjs.cloudflare.com/ajax/libs/jquery.js/2.1.4/jquery.min.js"></script>
-		<script scr="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.1.4/toastr.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 	</body>
 </html>

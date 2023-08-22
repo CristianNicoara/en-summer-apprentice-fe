@@ -1,26 +1,56 @@
 import { useStyle } from "./src/components/styles";
 import { kebabCase, addPurchase } from "./src/utils";
+import { createOrder } from "./src/components/createOrder";
+import { addLoader, removeLoader } from "./src/components/loader";
 
-// Navigate to a specific URL
+
 function navigateTo(url) {
   history.pushState(null, null, url);
   renderContent(url);
 }
-// HTML templates
+
 function getHomePageTemplate() {
   return `
    <div id="content" >
       <img class = "home-img" src="./src/assets/background_TMS.png" alt="summer">
+      <div class="filters page">
+        <input type="text" id="filter-by-name" placeholder="Search by Name" class="px-4 mt-4 mb-4 py-2 boarded border-indigo-800 rounded"/>
+        <div class = "px-4 mt-4 mb-4 py-2 flex-row-container">
+          <div class = "flex-direction-column">
+            <h2 class = "text-white text-lg font-bold mb-2">Choose the Location:</h2>
+            <select id="eventLocation" name="eventLocation" class="select border border-indigo-800 rounded">
+            </select>
+          </div>
+          <div class = "flex-direction-column">
+            <h2 class = "text-white text-lg font-bold mb-2">Choose the Event Type:</h2>
+            <select id="eventType" name="eventType" class="select border border-indigo-800 rounded">
+            </select>
+          </div>
+        </div>
+      </div>
       <div class="events flex items-center justify-center flex-wrap page">
       </div>
     </div>
   `;
 }
 
+
 function getOrdersPageTemplate() {
   return `
-    <div id="content">
-      <h1 class="text-2xl mb-4 mt-8 text-center">Purchased Tickets</h1>
+    <div id="content" class = "page">
+      <h1 class="text-2xl text-center">Purchased Tickets</h1>
+      <div class="orders">
+        <div class="px-4 py-3 gap-x-4 flex font-bold text-white">
+          <span class = "flex-1">Event</span>
+          <span class = "flex-1">Nr tickets</span>
+          <span class = "flex-1">Ticket Type</span>
+          <span class = "flex-1 hidden md:flex">Ordered At</span>
+          <span class = "flex-1">Price</span>
+          <span class = "w-28 sm:w-8"></span>
+        </div>
+        <div id="orders-content">
+        </div>
+      </div>
     </div>
   `;
 }
@@ -62,15 +92,89 @@ function setupInitialPage() {
 function renderHomePage() {
   const mainContentDiv = document.querySelector('.main-content-component');
   mainContentDiv.innerHTML = getHomePageTemplate();
+  addLoader();
   fetchTicketEvents().then((data) => {
-    console.log("data:", data);
-    addEventsToPage(data);
+    setTimeout(() => {
+      removeLoader()
+    }, 500);
+    setupFilters(data);
   });
 }
 
-async function fetchTicketEvents(){
+function filterByName(events, filterInput) {
+  const searchValue = filterInput.value;
+
+  if (searchValue !== undefined) {
+    const filteredEvents = events.filter((event) =>
+      event.eventName.toLowerCase().includes(searchValue.toLowerCase())
+    );
+    addEventsToPage(filteredEvents);
+  } else {
+    addEventsToPage(events);
+  }
+}
+
+async function setupFilters(events) {
+  const nameFilterInput = document.querySelector('#filter-by-name');
+
+  if (nameFilterInput) {
+    const filterInterval = 200;
+    nameFilterInput.addEventListener('keyup', () => {
+      setTimeout(filterByName(events, nameFilterInput), filterInterval);
+    })
+
+    addEventsToPage(events);
+  } else {
+    addEventsToPage(events);
+  }
+
+  const eventLocationFilter = document.getElementById('eventLocation');
+  const eventTypeFilter = document.getElementById('eventType');
+
+  const venues = await fetchVenues();
+  const eventTypes = await fetchEventTypes();
+
+  const eventLocationOptions = venues.map(
+    (venue) =>
+      `<option class = "text-sm font-bold text-black" value=${venue.id}>${venue.location}</option>`
+  ).join('\n');
+  eventLocationOptions.concat('<option class = "text-sm font-bold text-black" value=0>None</option>');
+
+  const eventTypeOptions = eventTypes.map(
+    (eventType) =>
+      `<option class = "text-sm font-bold text-black" value="${eventType.name}">${eventType.name}</option>`
+  ).join('\n');
+
+  eventLocationFilter.innerHTML = eventLocationOptions + '<option class = "text-sm font-bold text-black" value=0>None</option>';
+  eventTypeFilter.innerHTML = eventTypeOptions + '<option class = "text-sm font-bold text-black" value="None">None</option>';
+
+  eventLocationFilter.addEventListener("change", filterByLocationAndType);
+  eventTypeFilter.addEventListener("change", filterByLocationAndType);
+
+  async function filterByLocationAndType() {
+    const venueId = eventLocationFilter.value;
+    const eventTypeName = eventTypeFilter.value;
+    const respone = await fetch(`http://localhost:8080/events?venueId=${venueId}&eventTypeName=${eventTypeName}`);
+    const data = await respone.json();
+    addEventsToPage(data);
+  }
+}
+
+async function fetchVenues() {
+  const response = await fetch('http://localhost:8080/venues');
+  const data = await response.json();
+  return data;
+}
+
+async function fetchEventTypes() {
+  const respone = await fetch('http://localhost:8080/eventTypes');
+  const data = await respone.json();
+  return data;
+}
+
+async function fetchTicketEvents() {
   const response = await fetch('https://localhost:7268/api/Event/GetEvents');
-  const data  = await response.json();
+  const data = await response.json();
   return data;
 }
 
@@ -86,7 +190,7 @@ const addEventsToPage = (events) => {
 };
 
 const createEvent = (eventData) => {
-  const title = kebabCase(eventData.type);
+  const title = kebabCase(eventData.eventName);
   const eventElement = createEventElement(eventData, title);
   return eventElement;
 };
@@ -125,7 +229,7 @@ const createEventElement = (eventData, title) => {
 
   const categoriesOptions = ticketCategories.map(
     (ticketCategory) =>
-      `<option value=${ticketCategory.ticketCategoryDescription}>${ticketCategory.ticketCategoryDescription}</option>`
+      `<option value=${ticketCategory.ticketCategoryId}>${ticketCategory.ticketCategoryDescription} $${ticketCategory.ticketCategoryPrice}</option>`
   );
 
   const ticketTypeMarkup = `
@@ -162,9 +266,9 @@ const createEventElement = (eventData, title) => {
 
   quantity.appendChild(input);
 
-  const qunatityActions = document.createElement('div');
-  qunatityActions.classList.add(...quantityActionsClasses);
-  
+  const quantityActions = document.createElement('div');
+  quantityActions.classList.add(...quantityActionsClasses);
+
   const increase = document.createElement('button');
   increase.classList.add(...increaseBtnClasses);
   increase.innerText = "+";
@@ -194,10 +298,10 @@ const createEventElement = (eventData, title) => {
     }
   });
 
-  qunatityActions.appendChild(increase);
-  qunatityActions.appendChild(decrease);
+  quantityActions.appendChild(increase);
+  quantityActions.appendChild(decrease);
 
-  quantity.appendChild(qunatityActions);
+  quantity.appendChild(quantityActions);
   actions.appendChild(quantity);
   eventDiv.appendChild(actions);
 
@@ -208,7 +312,7 @@ const createEventElement = (eventData, title) => {
   addOrder.disabled = true;
 
   addOrder.addEventListener('click', () => {
-    handleAddOrder(title,eventData.eventId,input,addOrder);
+    handleAddOrder(title, eventData.eventId, input, addOrder);
   });
 
   eventFooter.appendChild(addOrder);
@@ -220,41 +324,76 @@ const createEventElement = (eventData, title) => {
 const handleAddOrder = (title, id, input, addOrder) => {
   const ticketType = document.querySelector(`.${kebabCase(title)}-ticket-type`).value;
   const quantity = input.value;
-  if (parseInt(quantity)){
-    fetch('http://localhost:8080/orders/add',{
-    method:"POST",
-    headers:{
-      "Content-Type":"application/json",
-    },
-    body:JSON.stringify({
-      eventId:id,
-      ticketCategoryDescription:ticketType,
-      numberOfTickets:quantity
+  if (parseInt(quantity)) {
+    fetch('http://localhost:8080/orders/add', {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        eventId: id,
+        ticketCategoryId: ticketType,
+        numberOfTickets: quantity
+      }),
     })
-  }).then((response) => {
-    return response.json().then((data) => {
-      if (!response.ok){
-        console.log("Something went wrong:(");
-      }
-      return data;
-    }) 
-  }).then((data) => {
-    addPurchase(data);
-    console.log("Done!:)");
-    input.value=0;
-    addOrder.disabled = true;
-  })
+      .then((response) => {
+        return response.json()
+          .then((data) => {
+            if (!response.ok) {
+              toastr.error("Order not possible!");
+            } else {
+              toastr.success("Success!")
+            }
+            return data;
+          });
+      })
+      .then((data) => {
+        addPurchase(data);
+        input.value = 0;
+        addOrder.disabled = true;
+      })
   } else {
 
   }
 }
 
-function renderOrdersPage(categories) {
+function renderOrdersPage() {
   const mainContentDiv = document.querySelector('.main-content-component');
   mainContentDiv.innerHTML = getOrdersPageTemplate();
+  addOrdersToPage();
 }
 
-// Render content based on URL
+async function fetchOrders() {
+  const response = await fetch('http://localhost:8080/orders');
+  const data = await response.json();
+  return data;
+}
+
+const addOrdersToPage = async () => {
+  const ordersDiv = document.querySelector('.orders');
+  const ordersContent = document.getElementById('orders-content');
+  if (ordersDiv) {
+    addLoader();
+    fetchOrders().then((orders) => {
+      if (orders.length) {
+        orders.forEach(async (order) => {
+          const newOrder = await createOrder(order);
+          ordersContent.appendChild(newOrder);
+        });
+        ordersDiv.appendChild(ordersContent);
+      } else {
+
+      }
+    })
+      .finally(() => {
+        setTimeout(() => {
+          removeLoader()
+        }, 500);
+      })
+  }
+};
+
+
 function renderContent(url) {
   const mainContentDiv = document.querySelector('.main-content-component');
   mainContentDiv.innerHTML = '';
@@ -262,7 +401,7 @@ function renderContent(url) {
   if (url === '/') {
     renderHomePage();
   } else if (url === '/orders') {
-    renderOrdersPage()
+    renderOrdersPage();
   }
 }
 
