@@ -1,0 +1,85 @@
+body {
+  font-family: 'Roboto', sans-serif;
+}
+
+.events {
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+h1 {
+  text-align: center;
+  font-size: 32px;
+  font-weight: bold;
+  margin-bottom: 12px;
+  color: #302942;
+}
+
+.events .event {
+  width: 300px;
+  border: 1px solid #ebf1f6;
+  box-shadow: 0 0 2px 0 rgba(145,158,171,.2), 0 12px 24px -4px rgba(145,158,171,.12);
+}
+
+.event-title {
+  color: #302942
+}
+
+.event img {
+  height: 150px;
+}
+
+#ticketType {
+  width: 100%;
+}
+
+.actions {
+  flex-wrap: wrap;
+}
+
+.quantity {
+  margin: 12px auto;
+}
+
+#page-header {
+  background: rgb(48,41,66);
+  background: linear-gradient(90deg, rgba(48,41,66,1) 0%, rgba(43,153,144,1) 50%, rgba(51,40,69,1) 100%, rgba(68,167,159,1) 100%);
+  position: sticky;
+  top: 0;
+}
+
+.link-item {
+  color: #332845
+}
+
+.logo {
+  height: 100px;
+  padding: 6px;
+}
+
+.add-btn {
+  background-color: #7e66c0;
+}
+
+.dec-btn {
+  background-color: #32bb92; 
+}
+
+.add-to-cart-btn {
+  background: #332845;
+  margin: 22px auto;
+  display: block;
+  width: 100%;
+}
+
+.main-content-component {
+  margin-bottom: 40px;
+}
+
+.home-img {
+  width: 1950px;
+}
+
+.page {
+  background-color: #271c3a;
+}
